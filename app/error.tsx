@@ -1,7 +1,5 @@
-import React from "react";
+"use client";
 
-function error() {
-  return <div>error</div>;
+export default function Error() {
+  return <div>Something went wrong</div>;
 }
-
-export default error;

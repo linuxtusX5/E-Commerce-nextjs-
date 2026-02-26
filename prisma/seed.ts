@@ -1,0 +1,25 @@
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
+async function main() {
+  await prisma.user.create({
+    data: {
+      name: "Admin",
+      email: "admin@test.com",
+      password: "123456",
+      role: "ADMIN",
+    },
+  });
+
+  console.log("🌱 Database seeded");
+}
+
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

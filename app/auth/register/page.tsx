@@ -1,11 +1,9 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { getSession } from "@/lib/auth/helpers";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { RegisterForm } from "@/components/auth/RegisterForm";
-import { SocialLogin } from "@/components/auth/SocialLogin";
 
-export const metadata = { title: "Create Account" };
+export const metadata = { title: "Create Account — MyStore" };
 
 export default async function RegisterPage() {
   const session = await getSession();
@@ -13,21 +11,11 @@ export default async function RegisterPage() {
 
   return (
     <AuthCard
-      title="Create your account"
-      subtitle="Join thousands of happy customers"
+      badge="New platform"
+      title={"Create your\nAccount"}
+      subtitle={"Quality products. \nTrusted services."}
     >
       <RegisterForm />
-      <SocialLogin />
-
-      <p className="mt-6 text-center text-sm text-gray-600">
-        Already have an account?{" "}
-        <Link
-          href="/auth/login"
-          className="font-medium text-blue-600 hover:text-blue-800"
-        >
-          Sign in
-        </Link>
-      </p>
     </AuthCard>
   );
 }

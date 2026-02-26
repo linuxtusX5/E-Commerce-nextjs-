@@ -1,32 +1,66 @@
 "use client";
 
 import { useActionState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { registerAction, type ActionState } from "@/lib/auth/actions";
+import { validateLoginAction, type ActionState } from "@/lib/auth/actions";
 
 const initialState: ActionState = { success: false, message: "" };
 
-export function RegisterForm() {
+const ERROR_MESSAGES: Record<string, string> = {
+  CredentialsSignin: "Invalid email or password.",
+  OAuthAccountNotLinked: "This email is linked to a different sign-in method.",
+  default: "Something went wrong. Please try again.",
+};
+
+export function LoginForm() {
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/";
+  const registered = searchParams.get("registered");
+  const authError = searchParams.get("error");
+
   const [state, formAction, isPending] = useActionState(
-    registerAction,
+    validateLoginAction,
     initialState,
   );
   const [showPassword, setShowPassword] = useState(false);
-  const [terms, setTerms] = useState(false);
+  const [isSigningIn, setIsSigningIn] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
+
+  // When Zod validation passes → trigger NextAuth credentials sign in
+  useEffect(() => {
+    if (!state.success) return;
+    const form = document.getElementById("lf-form") as HTMLFormElement;
+    const email = (form.elements.namedItem("email") as HTMLInputElement).value;
+    const password = (form.elements.namedItem("password") as HTMLInputElement)
+      .value;
+
+    setIsSigningIn(true);
+    signIn("credentials", { email, password, callbackUrl }).catch(() => {
+      setLoginError(ERROR_MESSAGES.default);
+      setIsSigningIn(false);
+    });
+  }, [state.success, callbackUrl]);
 
   const handleGoogle = async () => {
     setGoogleLoading(true);
-    await signIn("google", { callbackUrl: "/" });
+    await signIn("google", { callbackUrl });
     setGoogleLoading(false);
   };
+
+  const errorMessage =
+    loginError ??
+    (authError ? (ERROR_MESSAGES[authError] ?? ERROR_MESSAGES.default) : null);
+
+  const loading = isPending || isSigningIn;
 
   return (
     <>
       <style>{`
-        .rf-title {
+        .lf-title {
           font-size: 26px;
           font-weight: 700;
           color: #0f172a;
@@ -36,7 +70,7 @@ export function RegisterForm() {
           font-family: 'Sora', sans-serif;
         }
 
-        .rf-alert {
+        .lf-alert {
           display: flex;
           align-items: flex-start;
           gap: 8px;
@@ -46,27 +80,18 @@ export function RegisterForm() {
           margin-bottom: 14px;
           font-family: 'Sora', sans-serif;
         }
-        .rf-alert-error {
+        .lf-alert-error {
           background: #fef2f2;
           border: 1px solid #fecaca;
           color: #b91c1c;
         }
-
-        .rf-row {
-          display: flex;
-          gap: 12px;
-          margin-bottom: 12px;
+        .lf-alert-success {
+          background: #f0fdf4;
+          border: 1px solid #bbf7d0;
+          color: #15803d;
         }
 
-        .rf-field {
-          flex: 1;
-          position: relative;
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-
-        .rf-field-single {
+        .lf-field-single {
           margin-bottom: 12px;
           position: relative;
           display: flex;
@@ -74,7 +99,7 @@ export function RegisterForm() {
           gap: 4px;
         }
 
-        .rf-input {
+        .lf-input {
           width: 100%;
           height: 46px;
           padding: 0 42px 0 16px;
@@ -88,24 +113,24 @@ export function RegisterForm() {
           transition: all 0.2s;
         }
 
-        .rf-input::placeholder { color: #94a3b8; }
+        .lf-input::placeholder { color: #94a3b8; }
 
-        .rf-input:focus {
+        .lf-input:focus {
           border-color: #0ea5e9;
           background: #fff;
           box-shadow: 0 0 0 3px rgba(14,165,233,0.12);
         }
 
-        .rf-input-error {
+        .lf-input-error {
           border-color: #f87171 !important;
           background: #fff5f5 !important;
         }
-        .rf-input-error:focus {
+        .lf-input-error:focus {
           border-color: #ef4444 !important;
           box-shadow: 0 0 0 3px rgba(239,68,68,0.1) !important;
         }
 
-        .rf-field-icon {
+        .lf-field-icon {
           position: absolute;
           right: 14px;
           top: 13px;
@@ -118,43 +143,30 @@ export function RegisterForm() {
           padding: 0;
           transition: color 0.2s;
         }
-        .rf-field-icon:hover { color: #0ea5e9; }
+        .lf-field-icon:hover { color: #0ea5e9; }
 
-        .rf-error-msg {
+        .lf-error-msg {
           font-size: 11px;
           color: #ef4444;
           font-family: 'Sora', sans-serif;
         }
 
-        .rf-terms {
+        .lf-forgot-row {
           display: flex;
-          align-items: center;
-          gap: 10px;
-          margin: 14px 0;
+          justify-content: flex-end;
+          margin-bottom: 16px;
         }
 
-        .rf-terms input[type="checkbox"] {
-          width: 16px; height: 16px;
-          accent-color: #0ea5e9;
-          cursor: pointer;
-          flex-shrink: 0;
-        }
-
-        .rf-terms label {
+        .lf-forgot-row a {
           font-size: 12px;
-          color: #64748b;
-          cursor: pointer;
-          line-height: 1.4;
-          font-family: 'Sora', sans-serif;
-        }
-
-        .rf-terms a {
           color: #0ea5e9;
+          font-family: 'Sora', sans-serif;
           text-decoration: none;
           font-weight: 500;
         }
+        .lf-forgot-row a:hover { text-decoration: underline; }
 
-        .rf-btn-primary {
+        .lf-btn-primary {
           width: 100%;
           height: 48px;
           background: #0f172a;
@@ -175,51 +187,51 @@ export function RegisterForm() {
           overflow: hidden;
         }
 
-        .rf-btn-primary::after {
+        .lf-btn-primary::after {
           content: '';
           position: absolute;
           inset: 0;
           background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 60%);
         }
 
-        .rf-btn-primary:hover:not(:disabled) {
+        .lf-btn-primary:hover:not(:disabled) {
           background: #1e293b;
           transform: translateY(-1px);
           box-shadow: 0 8px 20px rgba(15,23,42,0.3);
         }
 
-        .rf-btn-primary:active:not(:disabled) { transform: translateY(0); }
+        .lf-btn-primary:active:not(:disabled) { transform: translateY(0); }
 
-        .rf-btn-primary:disabled {
+        .lf-btn-primary:disabled {
           opacity: 0.6;
           cursor: not-allowed;
         }
 
-        .rf-spinner {
+        .lf-spinner {
           width: 16px; height: 16px;
           border: 2px solid rgba(255,255,255,0.3);
           border-top-color: #fff;
           border-radius: 50%;
-          animation: rfSpin 0.7s linear infinite;
+          animation: lfSpin 0.7s linear infinite;
         }
-        @keyframes rfSpin { to { transform: rotate(360deg); } }
+        @keyframes lfSpin { to { transform: rotate(360deg); } }
 
-        .rf-divider {
+        .lf-divider {
           display: flex;
           align-items: center;
           gap: 12px;
           margin: 16px 0;
         }
-        .rf-divider::before, .rf-divider::after {
+        .lf-divider::before, .lf-divider::after {
           content: ''; flex: 1; height: 1px; background: #e2e8f0;
         }
-        .rf-divider span {
+        .lf-divider span {
           font-size: 12px;
           color: #94a3b8;
           font-family: 'Sora', sans-serif;
         }
 
-        .rf-btn-social {
+        .lf-btn-social {
           width: 100%;
           height: 44px;
           border-radius: 10px;
@@ -235,112 +247,101 @@ export function RegisterForm() {
           margin-bottom: 10px;
         }
 
-        .rf-btn-google {
+        .lf-btn-google {
           background: #fff;
           border: 1.5px solid #e2e8f0;
           color: #374151;
         }
-        .rf-btn-google:hover:not(:disabled) {
+        .lf-btn-google:hover:not(:disabled) {
           border-color: #cbd5e1;
           background: #f8fafc;
           box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
 
-        .rf-btn-apple {
+        .lf-btn-apple {
           background: #0f172a;
           border: 1.5px solid #0f172a;
           color: #fff;
           margin-bottom: 0;
         }
-        .rf-btn-apple:hover {
+        .lf-btn-apple:hover {
           background: #1e293b;
           box-shadow: 0 4px 12px rgba(15,23,42,0.2);
         }
 
-        .rf-btn-social:disabled {
+        .lf-btn-social:disabled {
           opacity: 0.6;
           cursor: not-allowed;
         }
 
-        .rf-signin {
+        .lf-signup {
           text-align: center;
           font-size: 12px;
           color: #64748b;
           margin-top: 16px;
           font-family: 'Sora', sans-serif;
         }
-        .rf-signin a {
+        .lf-signup a {
           color: #0ea5e9;
           font-weight: 600;
           text-decoration: none;
         }
-        .rf-signin a:hover { text-decoration: underline; }
-
-        @media (max-width: 640px) {
-          .rf-row { flex-direction: column; gap: 10px; }
-        }
+        .lf-signup a:hover { text-decoration: underline; }
       `}</style>
 
-      <h1 className="rf-title">Sign Up</h1>
+      <h1 className="lf-title">Sign In</h1>
 
-      <form action={formAction} noValidate>
-        {/* Global error */}
-        {state.message && !state.success && !state.errors && (
-          <div className="rf-alert rf-alert-error">
-            <svg
-              width="14"
-              height="14"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              style={{ flexShrink: 0, marginTop: 1 }}
-            >
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
-            {state.message}
-          </div>
-        )}
-
-        {/* Name row */}
-        <div className="rf-row">
-          <div className="rf-field">
-            <input
-              className={`rf-input ${state.errors?.name ? "rf-input-error" : ""}`}
-              type="text"
-              name="firstName"
-              placeholder="First name"
-              autoComplete="given-name"
-              required
-            />
-            {state.errors?.name && (
-              <span className="rf-error-msg">{state.errors.name[0]}</span>
-            )}
-          </div>
-          <div className="rf-field">
-            <input
-              className="rf-input"
-              type="text"
-              name="lastName"
-              placeholder="Last name"
-              autoComplete="family-name"
-            />
-          </div>
+      {/* Success message after registration */}
+      {registered && (
+        <div className="lf-alert lf-alert-success">
+          <svg
+            width="14"
+            height="14"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+            style={{ flexShrink: 0, marginTop: 1 }}
+          >
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
+          </svg>
+          Account created! Sign in to get started.
         </div>
+      )}
 
+      {/* Auth or sign-in error */}
+      {errorMessage && (
+        <div className="lf-alert lf-alert-error">
+          <svg
+            width="14"
+            height="14"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+            style={{ flexShrink: 0, marginTop: 1 }}
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          {errorMessage}
+        </div>
+      )}
+
+      <form id="lf-form" action={formAction} noValidate>
         {/* Email */}
-        <div className="rf-field-single">
+        <div className="lf-field-single">
           <input
-            className={`rf-input ${state.errors?.email ? "rf-input-error" : ""}`}
+            className={`lf-input ${state.errors?.email ? "lf-input-error" : ""}`}
             type="email"
             name="email"
             placeholder="Email address"
             autoComplete="email"
             required
           />
-          <span className="rf-field-icon" style={{ pointerEvents: "none" }}>
+          <span className="lf-field-icon" style={{ pointerEvents: "none" }}>
             <svg
               width="15"
               height="15"
@@ -353,23 +354,23 @@ export function RegisterForm() {
             </svg>
           </span>
           {state.errors?.email && (
-            <span className="rf-error-msg">{state.errors.email[0]}</span>
+            <span className="lf-error-msg">{state.errors.email[0]}</span>
           )}
         </div>
 
         {/* Password */}
-        <div className="rf-field-single">
+        <div className="lf-field-single">
           <input
-            className={`rf-input ${state.errors?.password ? "rf-input-error" : ""}`}
+            className={`lf-input ${state.errors?.password ? "lf-input-error" : ""}`}
             type={showPassword ? "text" : "password"}
             name="password"
             placeholder="Password"
-            autoComplete="new-password"
+            autoComplete="current-password"
             required
           />
           <button
             type="button"
-            className="rf-field-icon"
+            className="lf-field-icon"
             onClick={() => setShowPassword((v) => !v)}
             tabIndex={-1}
             aria-label={showPassword ? "Hide password" : "Show password"}
@@ -401,35 +402,22 @@ export function RegisterForm() {
             )}
           </button>
           {state.errors?.password && (
-            <span className="rf-error-msg">{state.errors.password[0]}</span>
+            <span className="lf-error-msg">{state.errors.password[0]}</span>
           )}
         </div>
 
-        {/* Terms */}
-        <div className="rf-terms">
-          <input
-            type="checkbox"
-            id="rf-terms"
-            checked={terms}
-            onChange={(e) => setTerms(e.target.checked)}
-            required
-          />
-          <label htmlFor="rf-terms">
-            Accept <Link href="/terms">Terms &amp; Conditions</Link>
-          </label>
+        {/* Forgot password */}
+        <div className="lf-forgot-row">
+          <Link href="/forgot-password">Forgot password?</Link>
         </div>
 
         {/* Submit */}
-        <button
-          type="submit"
-          className="rf-btn-primary"
-          disabled={isPending || !terms}
-        >
-          {isPending ? (
-            <span className="rf-spinner" />
+        <button type="submit" className="lf-btn-primary" disabled={loading}>
+          {loading ? (
+            <span className="lf-spinner" />
           ) : (
             <>
-              Join us
+              Sign in
               <svg
                 width="16"
                 height="16"
@@ -446,20 +434,20 @@ export function RegisterForm() {
       </form>
 
       {/* Divider */}
-      <div className="rf-divider">
+      <div className="lf-divider">
         <span>or</span>
       </div>
 
       {/* Google */}
       <button
-        className="rf-btn-social rf-btn-google"
+        className="lf-btn-social lf-btn-google"
         type="button"
         onClick={handleGoogle}
         disabled={googleLoading}
       >
         {googleLoading ? (
           <span
-            className="rf-spinner"
+            className="lf-spinner"
             style={{
               borderTopColor: "#4285F4",
               borderColor: "rgba(66,133,244,0.3)",
@@ -485,19 +473,20 @@ export function RegisterForm() {
             />
           </svg>
         )}
-        Sign up with Google
+        Sign in with Google
       </button>
 
       {/* Apple */}
-      <button className="rf-btn-social rf-btn-apple" type="button">
+      <button className="lf-btn-social lf-btn-apple" type="button">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
           <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
         </svg>
-        Sign up with Apple
+        Sign in with Apple
       </button>
 
-      <p className="rf-signin">
-        Already have an account? <Link href="/auth/login">Sign in</Link>
+      <p className="lf-signup">
+        Don&apos;t have an account?{" "}
+        <Link href="/auth/register">Create one</Link>
       </p>
     </>
   );

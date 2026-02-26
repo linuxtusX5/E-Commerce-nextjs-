@@ -68,7 +68,7 @@ export async function registerAction(
     data: { name, email, password: hashedPassword },
   });
 
-  redirect("/login?registered=true");
+  redirect("/auth/login?registered=true");
 }
 
 // ── Login (validate only — actual sign in happens client side) ──
