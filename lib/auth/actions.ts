@@ -1,95 +1,226 @@
-"use server";
+'use server'
 
-import { db } from "@/lib/db";
-import bcrypt from "bcryptjs";
-import { z } from "zod";
-import { redirect } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { prisma } from '@/lib/prisma'
+import { registerSchema, loginSchema } from '@/lib/validations/auth'
+import bcrypt from 'bcryptjs'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+import { z } from 'zod'
 
-// ── Schemas ──────────────────────────────────────────────
-const RegisterSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(/[A-Z]/, "Must contain at least one uppercase letter")
-    .regex(/[0-9]/, "Must contain at least one number"),
-});
+export async function registerAction(prevState: any, formData: FormData) {
+  console.log('📝 registerAction started');
+  
+  try {
+    // Log all form data
+    console.log('FormData entries:');
+    for (const [key, value] of formData.entries()) {
+      console.log(`${key}:`, value);
+    }
 
-const LoginSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(1, "Password is required"),
-});
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+    const name = formData.get('name') as string;
 
-// ── Types ─────────────────────────────────────────────────
-export type ActionState = {
-  success: boolean;
-  message: string;
-  errors?: Record<string, string[]>;
-};
+    console.log('Extracted values:', { email, password: '***', name });
 
-// ── Register ──────────────────────────────────────────────
-export async function registerAction(
-  _prev: ActionState,
-  formData: FormData,
-): Promise<ActionState> {
-  const raw = {
-    name: formData.get("name") as string,
-    email: formData.get("email") as string,
-    password: formData.get("password") as string,
-  };
+    // Validate
+    const validatedFields = registerSchema.parse({ 
+      email, 
+      password, 
+      name: name || undefined 
+    });
+    console.log('Validation passed:', validatedFields);
 
-  const parsed = RegisterSchema.safeParse(raw);
+    // Check if user exists
+    console.log('Checking for existing user with email:', validatedFields.email);
+    const existingUser = await prisma.user.findUnique({
+      where: { email: validatedFields.email.toLowerCase() } // Case insensitive
+    });
 
-  if (!parsed.success) {
-    return {
+    if (existingUser) {
+      console.log('❌ User already exists');
+      return { 
+        success: false,
+        error: 'User already exists',
+        fieldErrors: null,
+        message: null 
+      };
+    }
+
+    // Hash password
+    console.log('Hashing password...');
+    const hashedPassword = await bcrypt.hash(validatedFields.password, 10);
+    console.log('Password hashed');
+
+    // Create user
+    console.log('Creating user...');
+    const user = await prisma.user.create({
+      data: {
+        email: validatedFields.email.toLowerCase(), // Store lowercase
+        password: hashedPassword,
+        name: validatedFields.name || null,
+      },
+    });
+
+    console.log('✅ User created successfully:', {
+      id: user.id,
+      email: user.email,
+      name: user.name
+    });
+
+    // Set session cookie
+    const cookieStore = await cookies();
+    cookieStore.set('session', user.id, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+      path: '/',
+    });
+    console.log('Session cookie set');
+
+    return { 
+      success: true,
+      message: 'Account created successfully!',
+      error: null,
+      fieldErrors: null 
+    };
+
+  } catch (error) {
+    console.error('❌ registerAction error:', error);
+    
+    if (error instanceof z.ZodError) {
+      console.log('Validation errors:', error.errors);
+      const fieldErrors: Record<string, string[]> = {};
+      error.errors.forEach((err) => {
+        const path = err.path[0] as string;
+        if (!fieldErrors[path]) {
+          fieldErrors[path] = [];
+        }
+        fieldErrors[path].push(err.message);
+      });
+      
+      return { 
+        success: false,
+        error: 'Please check your input',
+        fieldErrors,
+        message: null 
+      };
+    }
+
+    // Handle Prisma errors
+    if (error.code === 'P2002') {
+      console.log('❌ Unique constraint violation (email already exists)');
+      return { 
+        success: false,
+        error: 'Email already exists',
+        fieldErrors: null,
+        message: null 
+      };
+    }
+
+    return { 
       success: false,
-      message: "Validation failed",
-      errors: parsed.error.flatten().fieldErrors,
+      error: 'Something went wrong. Please try again.',
+      fieldErrors: null,
+      message: null 
     };
   }
-
-  const { name, email, password } = parsed.data;
-
-  // Check if user exists
-  const existing = await db.user.findUnique({ where: { email } });
-  if (existing) {
-    return {
-      success: false,
-      message: "Validation failed",
-      errors: { email: ["An account with this email already exists"] },
-    };
-  }
-
-  const hashedPassword = await bcrypt.hash(password, 12);
-
-  await db.user.create({
-    data: { name, email, password: hashedPassword },
-  });
-
-  redirect("/auth/login?registered=true");
 }
 
-// ── Login (validate only — actual sign in happens client side) ──
-export async function validateLoginAction(
-  _prev: ActionState,
-  formData: FormData,
-): Promise<ActionState> {
-  const raw = {
-    email: formData.get("email") as string,
-    password: formData.get("password") as string,
-  };
+export async function LoginAction(prevState: any, formData: FormData) {
+  console.log('🔐 LoginAction started');
+  
+  try {
+    // Log what we received
+    console.log('FormData entries:');
+    for (const [key, value] of formData.entries()) {
+      console.log(`${key}:`, value);
+    }
 
-  const parsed = LoginSchema.safeParse(raw);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
 
-  if (!parsed.success) {
-    return {
+    console.log('Extracted:', { email, password: '***' });
+
+    // Validate
+    const validatedFields = loginSchema.parse({ email, password });
+    console.log('Validation passed:', validatedFields);
+
+    // Find user
+    console.log('Looking up user with email:', validatedFields.email);
+    const user = await prisma.user.findUnique({
+      where: { email: validatedFields.email }
+    });
+
+    console.log('User found:', user ? 'Yes' : 'No');
+    
+    if (!user) {
+      console.log('❌ No user found with this email');
+      return { 
+        success: false,
+        error: 'Invalid credentials',
+        fieldErrors: null,
+        message: null 
+      };
+    }
+
+    // Verify password
+    console.log('Comparing passwords...');
+    const passwordValid = await bcrypt.compare(validatedFields.password, user.password);
+    console.log('Password valid:', passwordValid);
+
+    if (!passwordValid) {
+      console.log('❌ Password incorrect');
+      return { 
+        success: false,
+        error: 'Invalid credentials',
+        fieldErrors: null,
+        message: null 
+      };
+    }
+
+    // Set session cookie
+    console.log('✅ Login successful, setting cookie for user:', user.id);
+    const cookieStore = await cookies();
+    cookieStore.set('session', user.id, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24 * 7,
+      path: '/',
+    });
+
+    console.log('Cookie set, returning success');
+    return { 
+      success: true,
+      message: 'Login successful!',
+      error: null,
+      fieldErrors: null 
+    };
+
+  } catch (error) {
+    console.error('❌ LoginAction error:', error);
+    
+    if (error.name === 'ZodError') {
+      console.log('Validation error:', error.errors);
+      return { 
+        success: false,
+        error: 'Invalid form data',
+        fieldErrors: null,
+        message: null 
+      };
+    }
+
+    return { 
       success: false,
-      message: "Validation failed",
-      errors: parsed.error.flatten().fieldErrors,
+      error: 'Something went wrong',
+      fieldErrors: null,
+      message: null 
     };
   }
+}
 
-  return { success: true, message: "ok" };
+export async function logout() {
+  const cookieStore = await cookies()
+  cookieStore.delete('userId')
+  redirect('/login')
 }
