@@ -4,14 +4,20 @@ import { useActionState } from "react";
 import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { registerAction, type ActionState } from "@/lib/auth/actions";
+import { useRouter } from 'next/navigation'
+import { registerAction } from "@/lib/auth/actions";
 
-const initialState: ActionState = { success: false, message: "" };
+const initialState = {
+  success: false,
+  error: null,
+  message: null,
+  fieldErrors: null,
+}
 
 export function RegisterForm() {
+  const router = useRouter()
   const [state, formAction, isPending] = useActionState(
-    registerAction,
-    initialState,
+    registerAction,initialState
   );
   const [showPassword, setShowPassword] = useState(false);
   const [terms, setTerms] = useState(false);
@@ -22,6 +28,17 @@ export function RegisterForm() {
     await signIn("google", { callbackUrl: "/" });
     setGoogleLoading(false);
   };
+
+  useEffect(() => {
+    if (state.success) {
+      const timer = setTimeout(() => router.push('/dashboard'), 1500)
+      return () => clearTimeout(timer)
+    }
+  }, [state.success, router])
+
+    const handleFormSubmit = (formData: FormData) => {
+    formAction(formData)
+  }
 
   return (
     <>
@@ -310,16 +327,16 @@ export function RegisterForm() {
             <input
               className={`rf-input ${state.errors?.name ? "rf-input-error" : ""}`}
               type="text"
-              name="firstName"
-              placeholder="First name"
-              autoComplete="given-name"
+              name="name"
+              placeholder="Name"
+              autoComplete="name"
               required
             />
             {state.errors?.name && (
               <span className="rf-error-msg">{state.errors.name[0]}</span>
             )}
           </div>
-          <div className="rf-field">
+          {/* <div className="rf-field">
             <input
               className="rf-input"
               type="text"
@@ -327,7 +344,7 @@ export function RegisterForm() {
               placeholder="Last name"
               autoComplete="family-name"
             />
-          </div>
+          </div> */}
         </div>
 
         {/* Email */}
