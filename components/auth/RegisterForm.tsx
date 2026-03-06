@@ -1,23 +1,17 @@
 "use client";
 
 import { useActionState } from "react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { useRouter } from 'next/navigation'
-import { registerAction } from "@/lib/auth/actions";
+import { registerAction, type ActionState } from "@/lib/auth/actions";
 
-const initialState = {
-  success: false,
-  error: null,
-  message: null,
-  fieldErrors: null,
-}
+const initialState: ActionState = { success: false, message: "" };
 
 export function RegisterForm() {
-  const router = useRouter()
   const [state, formAction, isPending] = useActionState(
-    registerAction,initialState
+    registerAction,
+    initialState,
   );
   const [showPassword, setShowPassword] = useState(false);
   const [terms, setTerms] = useState(false);
@@ -29,31 +23,22 @@ export function RegisterForm() {
     setGoogleLoading(false);
   };
 
-  useEffect(() => {
-    if (state.success) {
-      const timer = setTimeout(() => router.push('/dashboard'), 1500)
-      return () => clearTimeout(timer)
-    }
-  }, [state.success, router])
-
-    const handleFormSubmit = (formData: FormData) => {
-    formAction(formData)
-  }
-
   return (
     <>
       <style>{`
-        .rf-title {
-          font-size: 26px;
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap');
+
+        .af-title {
+          font-family: 'Sora', sans-serif;
+          font-size: 24px;
           font-weight: 700;
           color: #0f172a;
           letter-spacing: -0.03em;
           margin-bottom: 24px;
           text-align: center;
-          font-family: 'Sora', sans-serif;
         }
 
-        .rf-alert {
+        .af-alert-error {
           display: flex;
           align-items: flex-start;
           gap: 8px;
@@ -62,20 +47,18 @@ export function RegisterForm() {
           font-size: 12.5px;
           margin-bottom: 14px;
           font-family: 'Sora', sans-serif;
-        }
-        .rf-alert-error {
           background: #fef2f2;
           border: 1px solid #fecaca;
           color: #b91c1c;
         }
 
-        .rf-row {
+        .af-row {
           display: flex;
           gap: 12px;
           margin-bottom: 12px;
         }
 
-        .rf-field {
+        .af-field {
           flex: 1;
           position: relative;
           display: flex;
@@ -83,7 +66,7 @@ export function RegisterForm() {
           gap: 4px;
         }
 
-        .rf-field-single {
+        .af-field-single {
           margin-bottom: 12px;
           position: relative;
           display: flex;
@@ -91,7 +74,7 @@ export function RegisterForm() {
           gap: 4px;
         }
 
-        .rf-input {
+        .af-input {
           width: 100%;
           height: 46px;
           padding: 0 42px 0 16px;
@@ -105,24 +88,26 @@ export function RegisterForm() {
           transition: all 0.2s;
         }
 
-        .rf-input::placeholder { color: #94a3b8; }
+        .af-input::placeholder { color: #94a3b8; }
 
-        .rf-input:focus {
+        .af-input:focus {
           border-color: #0ea5e9;
           background: #fff;
           box-shadow: 0 0 0 3px rgba(14,165,233,0.12);
         }
 
-        .rf-input-error {
+        .af-input-err {
           border-color: #f87171 !important;
           background: #fff5f5 !important;
         }
-        .rf-input-error:focus {
-          border-color: #ef4444 !important;
-          box-shadow: 0 0 0 3px rgba(239,68,68,0.1) !important;
+
+        .af-err-msg {
+          font-size: 11px;
+          color: #ef4444;
+          font-family: 'Sora', sans-serif;
         }
 
-        .rf-field-icon {
+        .af-icon-btn {
           position: absolute;
           right: 14px;
           top: 13px;
@@ -135,29 +120,23 @@ export function RegisterForm() {
           padding: 0;
           transition: color 0.2s;
         }
-        .rf-field-icon:hover { color: #0ea5e9; }
+        .af-icon-btn:hover { color: #0ea5e9; }
 
-        .rf-error-msg {
-          font-size: 11px;
-          color: #ef4444;
-          font-family: 'Sora', sans-serif;
-        }
-
-        .rf-terms {
+        .af-terms {
           display: flex;
           align-items: center;
           gap: 10px;
           margin: 14px 0;
         }
 
-        .rf-terms input[type="checkbox"] {
+        .af-terms input[type="checkbox"] {
           width: 16px; height: 16px;
           accent-color: #0ea5e9;
           cursor: pointer;
           flex-shrink: 0;
         }
 
-        .rf-terms label {
+        .af-terms label {
           font-size: 12px;
           color: #64748b;
           cursor: pointer;
@@ -165,13 +144,9 @@ export function RegisterForm() {
           font-family: 'Sora', sans-serif;
         }
 
-        .rf-terms a {
-          color: #0ea5e9;
-          text-decoration: none;
-          font-weight: 500;
-        }
+        .af-terms a { color: #0ea5e9; text-decoration: none; font-weight: 500; }
 
-        .rf-btn-primary {
+        .af-btn-primary {
           width: 100%;
           height: 48px;
           background: #0f172a;
@@ -187,56 +162,53 @@ export function RegisterForm() {
           justify-content: center;
           gap: 8px;
           transition: all 0.2s;
-          letter-spacing: 0.01em;
           position: relative;
           overflow: hidden;
         }
 
-        .rf-btn-primary::after {
+        .af-btn-primary::after {
           content: '';
           position: absolute;
           inset: 0;
           background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 60%);
         }
 
-        .rf-btn-primary:hover:not(:disabled) {
+        .af-btn-primary:hover:not(:disabled) {
           background: #1e293b;
           transform: translateY(-1px);
-          box-shadow: 0 8px 20px rgba(15,23,42,0.3);
+          box-shadow: 0 8px 20px rgba(15,23,42,0.28);
         }
 
-        .rf-btn-primary:active:not(:disabled) { transform: translateY(0); }
+        .af-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        .rf-btn-primary:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-
-        .rf-spinner {
+        .af-spinner {
           width: 16px; height: 16px;
           border: 2px solid rgba(255,255,255,0.3);
           border-top-color: #fff;
           border-radius: 50%;
-          animation: rfSpin 0.7s linear infinite;
+          animation: afSpin 0.7s linear infinite;
         }
-        @keyframes rfSpin { to { transform: rotate(360deg); } }
 
-        .rf-divider {
+        @keyframes afSpin { to { transform: rotate(360deg); } }
+
+        .af-divider {
           display: flex;
           align-items: center;
           gap: 12px;
           margin: 16px 0;
         }
-        .rf-divider::before, .rf-divider::after {
+
+        .af-divider::before, .af-divider::after {
           content: ''; flex: 1; height: 1px; background: #e2e8f0;
         }
-        .rf-divider span {
+
+        .af-divider span {
           font-size: 12px;
           color: #94a3b8;
           font-family: 'Sora', sans-serif;
         }
 
-        .rf-btn-social {
+        .af-social-btn {
           width: 100%;
           height: 44px;
           border-radius: 10px;
@@ -252,58 +224,59 @@ export function RegisterForm() {
           margin-bottom: 10px;
         }
 
-        .rf-btn-google {
+        .af-btn-google {
           background: #fff;
           border: 1.5px solid #e2e8f0;
           color: #374151;
         }
-        .rf-btn-google:hover:not(:disabled) {
+
+        .af-btn-google:hover:not(:disabled) {
           border-color: #cbd5e1;
           background: #f8fafc;
           box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
 
-        .rf-btn-apple {
+        .af-btn-apple {
           background: #0f172a;
           border: 1.5px solid #0f172a;
           color: #fff;
           margin-bottom: 0;
         }
-        .rf-btn-apple:hover {
+
+        .af-btn-apple:hover {
           background: #1e293b;
           box-shadow: 0 4px 12px rgba(15,23,42,0.2);
         }
 
-        .rf-btn-social:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
+        .af-social-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        .rf-signin {
+        .af-footer-text {
           text-align: center;
-          font-size: 12px;
+          font-size: 12.5px;
           color: #64748b;
           margin-top: 16px;
           font-family: 'Sora', sans-serif;
         }
-        .rf-signin a {
+
+        .af-footer-text a {
           color: #0ea5e9;
           font-weight: 600;
           text-decoration: none;
         }
-        .rf-signin a:hover { text-decoration: underline; }
 
-        @media (max-width: 640px) {
-          .rf-row { flex-direction: column; gap: 10px; }
+        .af-footer-text a:hover { text-decoration: underline; }
+
+        @media (max-width: 480px) {
+          .af-row { flex-direction: column; gap: 10px; }
         }
       `}</style>
 
-      <h1 className="rf-title">Sign Up</h1>
+      <h1 className="af-title">Sign Up</h1>
 
       <form action={formAction} noValidate>
         {/* Global error */}
         {state.message && !state.success && !state.errors && (
-          <div className="rf-alert rf-alert-error">
+          <div className="af-alert-error">
             <svg
               width="14"
               height="14"
@@ -321,43 +294,32 @@ export function RegisterForm() {
           </div>
         )}
 
-        {/* Name row */}
-        <div className="rf-row">
-          <div className="rf-field">
-            <input
-              className={`rf-input ${state.errors?.name ? "rf-input-error" : ""}`}
-              type="text"
-              name="name"
-              placeholder="Name"
-              autoComplete="name"
-              required
-            />
-            {state.errors?.name && (
-              <span className="rf-error-msg">{state.errors.name[0]}</span>
-            )}
-          </div>
-          {/* <div className="rf-field">
-            <input
-              className="rf-input"
-              type="text"
-              name="lastName"
-              placeholder="Last name"
-              autoComplete="family-name"
-            />
-          </div> */}
+        {/* Name */}
+        <div className="af-field-single">
+          <input
+            className={`af-input${state.errors?.name ? " af-input-err" : ""}`}
+            type="text"
+            name="name"
+            placeholder="Full name"
+            autoComplete="name"
+            required
+          />
+          {state.errors?.name && (
+            <span className="af-err-msg">{state.errors.name[0]}</span>
+          )}
         </div>
 
         {/* Email */}
-        <div className="rf-field-single">
+        <div className="af-field-single">
           <input
-            className={`rf-input ${state.errors?.email ? "rf-input-error" : ""}`}
+            className={`af-input${state.errors?.email ? " af-input-err" : ""}`}
             type="email"
             name="email"
             placeholder="Email address"
             autoComplete="email"
             required
           />
-          <span className="rf-field-icon" style={{ pointerEvents: "none" }}>
+          <span className="af-icon-btn" style={{ pointerEvents: "none" }}>
             <svg
               width="15"
               height="15"
@@ -370,14 +332,14 @@ export function RegisterForm() {
             </svg>
           </span>
           {state.errors?.email && (
-            <span className="rf-error-msg">{state.errors.email[0]}</span>
+            <span className="af-err-msg">{state.errors.email[0]}</span>
           )}
         </div>
 
         {/* Password */}
-        <div className="rf-field-single">
+        <div className="af-field-single">
           <input
-            className={`rf-input ${state.errors?.password ? "rf-input-error" : ""}`}
+            className={`af-input${state.errors?.password ? " af-input-err" : ""}`}
             type={showPassword ? "text" : "password"}
             name="password"
             placeholder="Password"
@@ -386,10 +348,9 @@ export function RegisterForm() {
           />
           <button
             type="button"
-            className="rf-field-icon"
+            className="af-icon-btn"
             onClick={() => setShowPassword((v) => !v)}
             tabIndex={-1}
-            aria-label={showPassword ? "Hide password" : "Show password"}
           >
             {showPassword ? (
               <svg
@@ -418,20 +379,20 @@ export function RegisterForm() {
             )}
           </button>
           {state.errors?.password && (
-            <span className="rf-error-msg">{state.errors.password[0]}</span>
+            <span className="af-err-msg">{state.errors.password[0]}</span>
           )}
         </div>
 
         {/* Terms */}
-        <div className="rf-terms">
+        <div className="af-terms">
           <input
             type="checkbox"
-            id="rf-terms"
+            id="af-terms"
             checked={terms}
             onChange={(e) => setTerms(e.target.checked)}
             required
           />
-          <label htmlFor="rf-terms">
+          <label htmlFor="af-terms">
             Accept <Link href="/terms">Terms &amp; Conditions</Link>
           </label>
         </div>
@@ -439,11 +400,11 @@ export function RegisterForm() {
         {/* Submit */}
         <button
           type="submit"
-          className="rf-btn-primary"
+          className="af-btn-primary"
           disabled={isPending || !terms}
         >
           {isPending ? (
-            <span className="rf-spinner" />
+            <span className="af-spinner" />
           ) : (
             <>
               Join us
@@ -462,21 +423,20 @@ export function RegisterForm() {
         </button>
       </form>
 
-      {/* Divider */}
-      <div className="rf-divider">
+      <div className="af-divider">
         <span>or</span>
       </div>
 
       {/* Google */}
       <button
-        className="rf-btn-social rf-btn-google"
+        className="af-social-btn af-btn-google"
         type="button"
         onClick={handleGoogle}
         disabled={googleLoading}
       >
         {googleLoading ? (
           <span
-            className="rf-spinner"
+            className="af-spinner"
             style={{
               borderTopColor: "#4285F4",
               borderColor: "rgba(66,133,244,0.3)",
@@ -506,15 +466,15 @@ export function RegisterForm() {
       </button>
 
       {/* Apple */}
-      <button className="rf-btn-social rf-btn-apple" type="button">
+      <button className="af-social-btn af-btn-apple" type="button">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
           <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
         </svg>
         Sign up with Apple
       </button>
 
-      <p className="rf-signin">
-        Already have an account? <Link href="/auth/login">Sign in</Link>
+      <p className="af-footer-text">
+        Already have an account? <Link href="/login">Sign in</Link>
       </p>
     </>
   );
