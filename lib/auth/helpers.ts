@@ -1,10 +1,13 @@
-// helper
 import { getServerSession } from "next-auth";
 import { authOptions } from "./options";
 import { redirect } from "next/navigation";
 
 export async function getSession() {
-  return getServerSession(authOptions);
+  try {
+    return await getServerSession(authOptions);
+  } catch {
+    return null;
+  }
 }
 
 export async function getCurrentUser() {
@@ -14,13 +17,13 @@ export async function getCurrentUser() {
 
 export async function requireAuth() {
   const user = await getCurrentUser();
-  if (!user) redirect("/auth/login");
+  if (!user) redirect("/login");
   return user;
 }
 
 export async function requireAdmin() {
   const user = await getCurrentUser();
-  if (!user) redirect("/auth/login");
+  if (!user) redirect("/login");
   if (user.role !== "ADMIN") redirect("/");
   return user;
 }
