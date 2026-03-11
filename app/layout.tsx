@@ -3,6 +3,8 @@ import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { AuthSessionProvider } from "@/components/providers/SessionProvider";
 import { Footer } from "@/components/layout/Footer";
+import { CartDrawer } from "@/components/cart/CartDrawer";
+import { CartInitializer } from "@/components/cart/CartInitializer";
 
 export const metadata: Metadata = {
   title: "MyStore — Shop the Latest",
@@ -18,9 +20,8 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AuthSessionProvider>
-          <Header />
           <main>{children}</main>
-          <Footer />
+          <CartInitializer />
         </AuthSessionProvider>
       </body>
     </html>
