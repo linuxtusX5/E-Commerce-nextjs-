@@ -1,13 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
-import { signIn } from "next-auth/react";
+import { getSession, signIn } from "next-auth/react";
 import Link from "next/link";
-import { validateLoginAction, type ActionState } from "@/lib/auth/actions";
-
-const initialState: ActionState = { success: false, message: "" };
+import { useRouter } from "next/navigation";
 
 const ERROR_MAP: Record<string, string> = {
   CredentialsSignin: "Invalid email or password.",
@@ -16,34 +13,53 @@ const ERROR_MAP: Record<string, string> = {
 };
 
 export function LoginForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
   const registered = searchParams.get("registered");
   const authError = searchParams.get("error");
 
-  const [state, formAction, isPending] = useActionState(
-    validateLoginAction,
-    initialState,
-  );
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isSigningIn, setIsSigningIn] = useState(false);
-  const [loginError, setLoginError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  // When Zod validation passes → trigger NextAuth credentials sign in
-  useEffect(() => {
-    if (!state.success) return;
-    const form = document.getElementById("lf-form") as HTMLFormElement;
-    const email = (form.elements.namedItem("email") as HTMLInputElement).value;
-    const password = (form.elements.namedItem("password") as HTMLInputElement)
-      .value;
+  const errors: Record<string, string> = {};
+  if (!email) errors.email = "Email is required";
+  if (!password) errors.password = "Password is required";
 
-    setIsSigningIn(true);
-    signIn("credentials", { email, password, callbackUrl }).catch(() => {
-      setLoginError(ERROR_MAP.default);
-      setIsSigningIn(false);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    const res = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
     });
-  }, [state.success, callbackUrl]);
+
+    if (res?.error) {
+      setError(ERROR_MAP[res.error] ?? ERROR_MAP.default);
+      setIsLoading(false);
+    } else if (res?.ok) {
+      // window.location.replace(callbackUrl);
+
+      const session = await getSession();
+      if (session?.user?.role === "ADMIN") {
+        router.push("/admin");
+      } else {
+        router.push("/");
+      }
+    } else {
+      setError(ERROR_MAP.default);
+      setIsLoading(false);
+    }
+  };
 
   const handleGoogle = async () => {
     setGoogleLoading(true);
@@ -52,10 +68,7 @@ export function LoginForm() {
   };
 
   const errorMessage =
-    loginError ??
-    (authError ? (ERROR_MAP[authError] ?? ERROR_MAP.default) : null);
-
-  const loading = isPending || isSigningIn;
+    error ?? (authError ? (ERROR_MAP[authError] ?? ERROR_MAP.default) : null);
 
   return (
     <>
@@ -64,22 +77,15 @@ export function LoginForm() {
 
         .lf-title {
           font-family: 'Sora', sans-serif;
-          font-size: 24px;
-          font-weight: 700;
-          color: #0f172a;
-          letter-spacing: -0.03em;
-          margin-bottom: 24px;
-          text-align: center;
+          font-size: 24px; font-weight: 700;
+          color: #0f172a; letter-spacing: -0.03em;
+          margin-bottom: 24px; text-align: center;
         }
 
         .lf-alert {
-          display: flex;
-          align-items: flex-start;
-          gap: 8px;
-          padding: 10px 14px;
-          border-radius: 10px;
-          font-size: 12.5px;
-          margin-bottom: 14px;
+          display: flex; align-items: flex-start; gap: 8px;
+          padding: 10px 14px; border-radius: 10px;
+          font-size: 12.5px; margin-bottom: 14px;
           font-family: 'Sora', sans-serif;
         }
 
@@ -87,101 +93,56 @@ export function LoginForm() {
         .lf-alert-success { background:#f0fdf4; border:1px solid #bbf7d0; color:#15803d; }
 
         .lf-field {
-          margin-bottom: 12px;
-          position: relative;
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
+          margin-bottom: 12px; position: relative;
+          display: flex; flex-direction: column; gap: 4px;
         }
 
         .lf-input {
-          width: 100%;
-          height: 46px;
+          width: 100%; height: 46px;
           padding: 0 42px 0 16px;
-          border: 1.5px solid #e2e8f0;
-          border-radius: 10px;
-          font-family: 'Sora', sans-serif;
-          font-size: 13px;
-          color: #0f172a;
-          background: #f8fafc;
-          outline: none;
-          transition: all 0.2s;
+          border: 1.5px solid #e2e8f0; border-radius: 10px;
+          font-family: 'Sora', sans-serif; font-size: 13px;
+          color: #0f172a; background: #f8fafc;
+          outline: none; transition: all 0.2s;
+          box-sizing: border-box;
         }
 
         .lf-input::placeholder { color: #94a3b8; }
 
         .lf-input:focus {
-          border-color: #0ea5e9;
-          background: #fff;
+          border-color: #0ea5e9; background: #fff;
           box-shadow: 0 0 0 3px rgba(14,165,233,0.12);
         }
 
         .lf-input-err { border-color:#f87171!important; background:#fff5f5!important; }
-
-        .lf-err-msg {
-          font-size: 11px;
-          color: #ef4444;
-          font-family: 'Sora', sans-serif;
-        }
+        .lf-err-msg { font-size: 11px; color: #ef4444; font-family: 'Sora', sans-serif; }
 
         .lf-icon-btn {
-          position: absolute;
-          right: 14px; top: 13px;
-          color: #94a3b8;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          background: none;
-          border: none;
-          padding: 0;
+          position: absolute; right: 14px; top: 13px;
+          color: #94a3b8; cursor: pointer;
+          display: flex; align-items: center;
+          background: none; border: none; padding: 0;
           transition: color 0.2s;
         }
         .lf-icon-btn:hover { color: #0ea5e9; }
 
-        .lf-forgot {
-          display: flex;
-          justify-content: flex-end;
-          margin-bottom: 16px;
-        }
-
-        .lf-forgot a {
-          font-size: 12px;
-          color: #0ea5e9;
-          font-family: 'Sora', sans-serif;
-          text-decoration: none;
-          font-weight: 500;
-        }
-        .lf-forgot a:hover { text-decoration: underline; }
+        .lf-forgot { display: flex; justify-content: flex-end; margin-bottom: 16px; }
+        .lf-forgot a { font-size:12px; color:#0ea5e9; font-family:'Sora',sans-serif; text-decoration:none; font-weight:500; }
+        .lf-forgot a:hover { text-decoration:underline; }
 
         .lf-btn-primary {
-          width: 100%;
-          height: 48px;
-          background: #0f172a;
-          color: #fff;
-          border: none;
-          border-radius: 10px;
+          width: 100%; height: 48px;
+          background: #0f172a; color: #fff;
+          border: none; border-radius: 10px;
           font-family: 'Sora', sans-serif;
-          font-size: 14px;
-          font-weight: 600;
+          font-size: 14px; font-weight: 600;
           cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
+          display: flex; align-items: center; justify-content: center; gap: 8px;
           transition: all 0.2s;
-          position: relative;
-          overflow: hidden;
-        }
-
-        .lf-btn-primary::after {
-          content:'';
-          position:absolute;inset:0;
-          background:linear-gradient(135deg,rgba(255,255,255,0.08) 0%,transparent 60%);
         }
 
         .lf-btn-primary:hover:not(:disabled) {
-          background: #1e293b;
-          transform: translateY(-1px);
+          background: #1e293b; transform: translateY(-1px);
           box-shadow: 0 8px 20px rgba(15,23,42,0.28);
         }
 
@@ -190,17 +151,14 @@ export function LoginForm() {
         .lf-spinner {
           width:16px; height:16px;
           border:2px solid rgba(255,255,255,0.3);
-          border-top-color:#fff;
-          border-radius:50%;
+          border-top-color:#fff; border-radius:50%;
           animation:lfSpin 0.7s linear infinite;
         }
         @keyframes lfSpin { to { transform:rotate(360deg); } }
 
-        .lf-divider {
-          display:flex;align-items:center;gap:12px;margin:16px 0;
-        }
-        .lf-divider::before,.lf-divider::after { content:'';flex:1;height:1px;background:#e2e8f0; }
-        .lf-divider span { font-size:12px;color:#94a3b8;font-family:'Sora',sans-serif; }
+        .lf-divider { display:flex; align-items:center; gap:12px; margin:16px 0; }
+        .lf-divider::before,.lf-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+        .lf-divider span { font-size:12px; color:#94a3b8; font-family:'Sora',sans-serif; }
 
         .lf-social-btn {
           width:100%; height:44px; border-radius:10px;
@@ -210,16 +168,14 @@ export function LoginForm() {
         }
 
         .lf-btn-google { background:#fff; border:1.5px solid #e2e8f0; color:#374151; }
-        .lf-btn-google:hover:not(:disabled) { border-color:#cbd5e1; background:#f8fafc; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
-
-        .lf-btn-apple { background:#0f172a; border:1.5px solid #0f172a; color:#fff; margin-bottom:0; }
-        .lf-btn-apple:hover { background:#1e293b; box-shadow:0 4px 12px rgba(15,23,42,0.2); }
-
+        .lf-btn-google:hover:not(:disabled) { border-color:#cbd5e1; background:#f8fafc; }
+        .lf-btn-apple  { background:#0f172a; border:1.5px solid #0f172a; color:#fff; margin-bottom:0; }
+        .lf-btn-apple:hover { background:#1e293b; }
         .lf-social-btn:disabled { opacity:0.6; cursor:not-allowed; }
 
         .lf-footer-text {
-          text-align:center;font-size:12.5px;color:#64748b;
-          margin-top:16px;font-family:'Sora',sans-serif;
+          text-align:center; font-size:12.5px; color:#64748b;
+          margin-top:16px; font-family:'Sora',sans-serif;
         }
         .lf-footer-text a { color:#0ea5e9; font-weight:600; text-decoration:none; }
         .lf-footer-text a:hover { text-decoration:underline; }
@@ -227,54 +183,26 @@ export function LoginForm() {
 
       <h1 className="lf-title">Sign In</h1>
 
-      {/* Success toast after register */}
       {registered && (
         <div className="lf-alert lf-alert-success">
-          <svg
-            width="14"
-            height="14"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-            style={{ flexShrink: 0, marginTop: 1 }}
-          >
-            <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
-            <polyline points="22 4 12 14.01 9 11.01" />
-          </svg>
-          Account created! Sign in to get started.
+          ✓ Account created! Sign in to get started.
         </div>
       )}
 
-      {/* Auth error */}
       {errorMessage && (
-        <div className="lf-alert lf-alert-error">
-          <svg
-            width="14"
-            height="14"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-            style={{ flexShrink: 0, marginTop: 1 }}
-          >
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
-          {errorMessage}
-        </div>
+        <div className="lf-alert lf-alert-error">⚠ {errorMessage}</div>
       )}
 
-      <form id="lf-form" action={formAction} noValidate>
+      <form onSubmit={handleSubmit} noValidate>
         {/* Email */}
         <div className="lf-field">
           <input
-            className={`lf-input${state.errors?.email ? " lf-input-err" : ""}`}
+            className="lf-input"
             type="email"
-            name="email"
             placeholder="Email address"
             autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
           />
           <span className="lf-icon-btn" style={{ pointerEvents: "none" }}>
@@ -289,19 +217,17 @@ export function LoginForm() {
               <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
           </span>
-          {state.errors?.email && (
-            <span className="lf-err-msg">{state.errors.email[0]}</span>
-          )}
         </div>
 
         {/* Password */}
         <div className="lf-field">
           <input
-            className={`lf-input${state.errors?.password ? " lf-input-err" : ""}`}
+            className="lf-input"
             type={showPassword ? "text" : "password"}
-            name="password"
             placeholder="Password"
             autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             required
           />
           <button
@@ -336,35 +262,14 @@ export function LoginForm() {
               </svg>
             )}
           </button>
-          {state.errors?.password && (
-            <span className="lf-err-msg">{state.errors.password[0]}</span>
-          )}
         </div>
 
-        {/* Forgot */}
         <div className="lf-forgot">
           <Link href="/forgot-password">Forgot password?</Link>
         </div>
 
-        {/* Submit */}
-        <button type="submit" className="lf-btn-primary" disabled={loading}>
-          {loading ? (
-            <span className="lf-spinner" />
-          ) : (
-            <>
-              Sign in
-              <svg
-                width="16"
-                height="16"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.2"
-                viewBox="0 0 24 24"
-              >
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-            </>
-          )}
+        <button type="submit" className="lf-btn-primary" disabled={isLoading}>
+          {isLoading ? <span className="lf-spinner" /> : "Sign in →"}
         </button>
       </form>
 
@@ -372,7 +277,6 @@ export function LoginForm() {
         <span>or</span>
       </div>
 
-      {/* Google */}
       <button
         className="lf-social-btn lf-btn-google"
         type="button"
@@ -410,7 +314,6 @@ export function LoginForm() {
         Sign in with Google
       </button>
 
-      {/* Apple */}
       <button className="lf-social-btn lf-btn-apple" type="button">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
           <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
