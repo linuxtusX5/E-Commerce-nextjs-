@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { db } from "@/lib/db";
+import { sendOrderConfirmationEmail } from "@/lib/email";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-01-28.clover",
@@ -39,7 +40,7 @@ export async function POST(req: Request) {
       });
       if (existing) return NextResponse.json({ received: true });
 
-      await db.order.create({
+      const order = await db.order.create({
         data: {
           userId,
           total,
@@ -54,6 +55,28 @@ export async function POST(req: Request) {
           },
         },
       });
+
+      // Fetch user + full order for email
+      const [user, fullOrder] = await Promise.all([
+        db.user.findUnique({
+          where: { id: userId },
+          select: { name: true, email: true },
+        }),
+        db.order.findUnique({
+          where: { id: order.id },
+          include: {
+            items: { include: { product: true } },
+          },
+        }),
+      ]);
+
+      if (user && fullOrder) {
+        await sendOrderConfirmationEmail({
+          name: user.name ?? "",
+          email: user.email,
+          order: fullOrder,
+        });
+      }
     } catch (err) {
       console.error("Failed to create order:", err);
       return NextResponse.json(
@@ -66,5 +89,4 @@ export async function POST(req: Request) {
   return NextResponse.json({ received: true });
 }
 
-// Required: disable body parsing so Stripe can verify signature
 export const runtime = "nodejs";
