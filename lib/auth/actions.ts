@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { redirect } from "next/navigation";
+import { sendWelcomeEmail } from "@/lib/email";
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
 
@@ -74,6 +75,7 @@ export async function registerAction(
     await db.user.create({
       data: { name, email, password: hashedPassword },
     });
+    await sendWelcomeEmail({ name: name ?? "", email });
   } catch (error) {
     console.error("[REGISTER_ACTION]", error);
     return {
