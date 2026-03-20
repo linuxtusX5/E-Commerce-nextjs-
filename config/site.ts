@@ -5,7 +5,6 @@ export const siteConfig = {
   nav: [
     { label: "Home", href: "/" },
     { label: "Products", href: "/products" },
-    { label: "Categories", href: "/category" },
   ],
   social: {
     twitter: "https://twitter.com/mystore",
