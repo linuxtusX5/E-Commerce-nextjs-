@@ -8,6 +8,7 @@ import { ProductInfo } from "@/components/product/ProductInfo";
 import { RelatedProducts } from "@/components/product/RelatedProducts";
 import { Breadcrumb } from "@/components/common/Breadcrumb";
 import type { Metadata } from "next";
+import { ProductReviews } from "@/components/product/ProductReviews";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -122,12 +123,10 @@ export default async function ProductDetailPage({ params }: Props) {
             ]}
           />
         </div>
-
         <div className="pd-main">
           <ProductGallery images={product.images} name={product.name} />
           <ProductInfo product={product} />
         </div>
-
         {related.length > 0 && (
           <section className="pd-related">
             <div className="pd-related-inner">
@@ -143,7 +142,13 @@ export default async function ProductDetailPage({ params }: Props) {
               <RelatedProducts products={related} />
             </div>
           </section>
-        )}
+        )}{" "}
+        {/* Reviews — always show */}
+        <section className="pd-related">
+          <div className="pd-related-inner">
+            <ProductReviews productId={product.id} />
+          </div>
+        </section>
       </div>
     </>
   );
