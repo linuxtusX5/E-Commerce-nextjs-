@@ -13,6 +13,7 @@ async function getStats() {
     recentOrders,
     topProducts,
     ordersByStatus,
+    lowStockProducts,
   ] = await Promise.all([
     db.order.aggregate({
       _sum: { total: true },
@@ -40,6 +41,18 @@ async function getStats() {
     db.order.groupBy({
       by: ["status"],
       _count: { id: true },
+    }),
+    db.product.findMany({
+      where: { stock: { lte: 5 } },
+      orderBy: { stock: "asc" },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        stock: true,
+        images: true,
+        category: { select: { name: true } },
+      },
     }),
   ]);
 
@@ -72,6 +85,7 @@ async function getStats() {
     topProducts: topProductsWithDetails,
     ordersByStatus,
     revenueByDay,
+    lowStockProducts,
   };
 }
 
