@@ -1,7 +1,23 @@
-import React from "react";
+import Image from "next/image";
+import LoadingGif from "@/public/loading.gif";
 
-function loading() {
-  return <div>loading</div>;
+export default function Loading() {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: "90vh",
+      }}
+    >
+      <Image
+        src={LoadingGif}
+        alt="Loading..."
+        width={80}
+        height={80}
+        unoptimized
+      />
+    </div>
+  );
 }
-
-export default loading;
