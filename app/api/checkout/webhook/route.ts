@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { db } from "@/lib/db";
-import { sendOrderConfirmationEmail } from "@/lib/email";
+import { sendOrderConfirmationEmail, sendLowStockEmail } from "@/lib/email";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-01-28.clover",
@@ -55,7 +55,15 @@ export async function POST(req: Request) {
           },
         },
       });
-
+      // Decrement stock for each purchased item
+      await Promise.all(
+        items.map((item: any) =>
+          db.product.update({
+            where: { id: item.productId },
+            data: { stock: { decrement: item.quantity } },
+          }),
+        ),
+      );
       // Fetch user + full order for email
       const [user, fullOrder] = await Promise.all([
         db.user.findUnique({
@@ -76,6 +84,19 @@ export async function POST(req: Request) {
           email: user.email,
           order: fullOrder,
         });
+      }
+      // Check for low stock on purchased products
+      const purchasedProductIds = items.map((i: any) => i.productId);
+      const lowStockProducts = await db.product.findMany({
+        where: {
+          id: { in: purchasedProductIds },
+          stock: { lte: 5 },
+        },
+        select: { name: true, stock: true, slug: true },
+      });
+
+      if (lowStockProducts.length > 0) {
+        await sendLowStockEmail(lowStockProducts);
       }
     } catch (err) {
       console.error("Failed to create order:", err);
