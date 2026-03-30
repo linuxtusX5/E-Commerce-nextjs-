@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
@@ -22,13 +23,7 @@ type Props = {
   onSearchOpen: () => void;
 };
 
-const categories = [
-  { label: "New Arrivals", href: "/products?sort=newest" },
-  { label: "Men", href: "/category/men" },
-  { label: "Women", href: "/category/women" },
-  { label: "Accessories", href: "/category/accessories" },
-  { label: "Sale", href: "/products?sort=price-asc", accent: true },
-];
+type Category = { id: string; name: string; slug: string };
 
 export function Navbar({
   scrolled,
@@ -40,6 +35,17 @@ export function Navbar({
   const { data: session } = useSession();
   const totalItems = useCartStore((s: any) => s.getTotalItems());
   const toggleCart = useCartStore((s: any) => s.toggleCart);
+  const [mounted, setMounted] = useState(false);
+
+  const [categories, setCategories] = useState<Category[]>([]);
+  useEffect(() => {
+    setMounted(true);
+    fetch("/api/categories")
+      .then((r) => r.json())
+      .then((d) => setCategories(d.categories ?? []));
+  }, []);
+
+  const cartCount = mounted ? totalItems : 0;
 
   return (
     <>
@@ -375,19 +381,28 @@ export function Navbar({
           {/* Categories dropdown */}
           <li className="nav-dropdown">
             <button className="nav-dropdown-trigger">
-              Shop
+              Category
               <ChevronDown size={14} />
             </button>
             <div className="nav-dropdown-menu">
               {categories.map((cat) => (
                 <Link
-                  key={cat.href}
-                  href={cat.href}
-                  className={`nav-dropdown-item ${cat.accent ? "nav-link-accent" : ""}`}
+                  key={cat.id}
+                  href={`/category/${cat.slug}`}
+                  className="nav-dropdown-item"
                 >
-                  {cat.label}
+                  {cat.name}
                 </Link>
               ))}
+              {categories.length > 0 && (
+                <div className="nav-dropdown-divider" />
+              )}
+              <Link
+                href="/products"
+                className="nav-dropdown-item nav-dropdown-all"
+              >
+                All products →
+              </Link>
             </div>
           </li>
         </ul>
@@ -405,7 +420,7 @@ export function Navbar({
 
           {/* Wishlist */}
           <Link
-            href="/wishlist"
+            href="/account/wishlist"
             className="nav-icon-btn nav-desktop-only"
             aria-label="Wishlist"
           >
@@ -419,9 +434,9 @@ export function Navbar({
             aria-label="Cart"
           >
             <ShoppingBag size={18} />
-            {totalItems > 0 && (
+            {cartCount > 0 && (
               <span className="nav-badge">
-                {totalItems > 99 ? "99+" : totalItems}
+                {cartCount > 99 ? "99+" : cartCount}
               </span>
             )}
           </button>
@@ -464,7 +479,7 @@ export function Navbar({
                     {session.user?.email}
                   </p>
                 </div>
-                <Link href="/account/profile" className="nav-user-item">
+                <Link href="/account" className="nav-user-item">
                   My Profile
                 </Link>
                 <Link href="/account/orders" className="nav-user-item">
@@ -483,7 +498,7 @@ export function Navbar({
               </div>
             </div>
           ) : (
-            <Link href="/auth/login" className="nav-cta nav-desktop-only">
+            <Link href="/login" className="nav-cta nav-desktop-only">
               Sign in
             </Link>
           )}
