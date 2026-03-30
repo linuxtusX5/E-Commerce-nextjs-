@@ -433,14 +433,14 @@ export function MobileMenu({ isOpen, onClose }: Props) {
               <div className="mm-divider" />
               <div className="mm-auth-btns">
                 <Link
-                  href="/auth/login"
+                  href="/login"
                   className="mm-btn-primary"
                   onClick={onClose}
                 >
                   Sign in
                 </Link>
                 <Link
-                  href="/auth/register"
+                  href="/register"
                   className="mm-btn-outline"
                   onClick={onClose}
                 >
