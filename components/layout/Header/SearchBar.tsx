@@ -84,7 +84,7 @@ export function SearchBar({ isOpen, onClose }: Props) {
     }
 
     setLoading(true);
-    fetch(`/api/products?search=${encodeURIComponent(debouncedQuery)}&limit=5`)
+    fetch(`/api/search?q=${encodeURIComponent(debouncedQuery)}&limit=5`)
       .then((r) => r.json())
       .then((data) => setResults(data.products ?? []))
       .catch(() => setResults([]))
