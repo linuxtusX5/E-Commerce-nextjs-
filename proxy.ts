@@ -1,36 +1,44 @@
-import { withAuth } from "next-auth/middleware";
+import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-export default withAuth(
-  function middleware(req) {
-    const { pathname } = req.nextUrl;
-    const token = req.nextauth.token;
+const PROTECTED_ROUTES = ["/account", "/checkout"];
+const ADMIN_ROUTES = ["/admin"];
+const AUTH_ROUTES = ["/login", "/register"];
 
-    // Admin guard
-    if (pathname.startsWith("/admin") && token?.role !== "ADMIN") {
-      return NextResponse.redirect(new URL("/", req.url));
+export async function proxy(req: NextRequest) {
+  const token = await getToken({
+    req,
+    secret: process.env.NEXTAUTH_SECRET,
+  });
+
+  const { pathname } = req.nextUrl;
+  const isLoggedIn = !!token;
+  const isAdmin = token?.role === "ADMIN";
+
+  if (isLoggedIn && AUTH_ROUTES.some((r) => pathname.startsWith(r))) {
+    return NextResponse.redirect(new URL("/", req.nextUrl));
+  }
+
+  if (PROTECTED_ROUTES.some((r) => pathname.startsWith(r))) {
+    if (!isLoggedIn) {
+      const url = new URL("/login", req.nextUrl);
+      url.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(url);
     }
+  }
 
-    return NextResponse.next();
-  },
-  {
-    callbacks: {
-      authorized: ({ token, req }) => {
-        const { pathname } = req.nextUrl;
-        // Protect account and checkout routes
-        if (
-          pathname.startsWith("/account") ||
-          pathname.startsWith("/checkout") ||
-          pathname.startsWith("/admin")
-        ) {
-          return !!token;
-        }
-        return true;
-      },
-    },
-  },
-);
+  if (ADMIN_ROUTES.some((r) => pathname.startsWith(r))) {
+    if (!isLoggedIn)
+      return NextResponse.redirect(new URL("/login", req.nextUrl));
+    if (!isAdmin) return NextResponse.redirect(new URL("/", req.nextUrl));
+  }
+
+  return NextResponse.next();
+}
 
 export const config = {
-  matcher: ["/account/:path*", "/checkout/:path*", "/admin/:path*"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$|api/auth).*)",
+  ],
 };

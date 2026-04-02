@@ -1,7 +1,6 @@
-
 generator client {
   provider = "prisma-client"
-  output   = "../src/generated"
+  output   = "../app/generated/prisma"
 }
 
 datasource db {
@@ -15,7 +14,11 @@ model User {
   password  String?
   role      Role     @default(USER)
 
-  orders    Order[]
+  orders        Order[]
+  wishlistItems WishlistItem[]
+  addresses     Address[]
+  reviews Review[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -32,7 +35,9 @@ model Product {
   categoryId  String
   category    Category @relation(fields: [categoryId], references: [id])
 
-  orderItems  OrderItem[]
+  orderItems    OrderItem[]
+  wishlistItems WishlistItem[]
+  reviews Review[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -42,6 +47,7 @@ model Category {
   id        String    @id @default(cuid())
   name      String
   slug      String    @unique
+  image    String? 
   products  Product[]
 }
 
@@ -71,6 +77,38 @@ model OrderItem {
   price     Float
 }
 
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+model Address {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+
+  label      String   @default("Home")   // e.g. Home, Work, Other
+  firstName  String
+  lastName   String
+  line1      String
+  line2      String?
+  city       String
+  state      String
+  postalCode String
+  country    String   @default("US")
+  phone      String?
+  isDefault  Boolean  @default(false)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
 enum Role {
   USER
   ADMIN
@@ -82,4 +120,19 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   CANCELLED
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  rating    Int      // 1-5
+  title     String?
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, productId])
 }
