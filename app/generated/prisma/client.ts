@@ -75,6 +75,11 @@ export type WishlistItem = Prisma.WishlistItemModel
  */
 export type Address = Prisma.AddressModel
 /**
+ * Model ProductVariant
+ * 
+ */
+export type ProductVariant = Prisma.ProductVariantModel
+/**
  * Model Review
  * 
  */
