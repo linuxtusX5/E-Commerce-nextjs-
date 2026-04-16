@@ -16,10 +16,10 @@ export async function GET(
 
 export async function POST(
   req: Request,
-  { params }: { params: Promise<{ productId: string }> },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   await requireAdmin();
-  const { productId } = await params;
+  const { id: productId } = await params;
   const { size, color, colorHex, stock, price } = await req.json();
 
   if (!size && !color) {
