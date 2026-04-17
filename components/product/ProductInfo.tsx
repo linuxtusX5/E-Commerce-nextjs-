@@ -23,6 +23,7 @@ type Product = {
   images: string[];
   category: { id: string; name: string; slug: string };
 };
+import { VariantSelector } from "@/components/product/VariantSelector";
 
 type Props = { product: Product };
 
@@ -35,6 +36,8 @@ export function ProductInfo({ product }: Props) {
   const isInCart = useCartStore((s) => s.isInCart);
   const inCart = isInCart(product.id);
   const outOfStock = product.stock === 0;
+  const [selectedVariant, setSelectedVariant] = useState<any>(null);
+  const [currentPrice, setCurrentPrice] = useState(product.price);
 
   const handleAddToCart = () => {
     addItem(
@@ -48,6 +51,14 @@ export function ProductInfo({ product }: Props) {
         category: product.category,
       },
       qty,
+      selectedVariant
+        ? {
+            id: selectedVariant.id,
+            label: [selectedVariant.size, selectedVariant.color]
+              .filter(Boolean)
+              .join(" / "),
+          }
+        : undefined,
     );
     setAdded(true);
     openCart();
@@ -377,6 +388,14 @@ export function ProductInfo({ product }: Props) {
         </div>
 
         <hr className="pi-divider" />
+        <VariantSelector
+          productId={product.id}
+          basePrice={product.price}
+          onVariantChange={(variant, price) => {
+            setSelectedVariant(variant);
+            setCurrentPrice(price);
+          }}
+        />
 
         {/* Description */}
         <p className="pi-desc">{product.description}</p>
