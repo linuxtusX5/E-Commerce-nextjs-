@@ -15,7 +15,7 @@ import {
   ImagePlus,
   Loader2,
 } from "lucide-react";
-
+import { AdminVariantManager } from "@/components/admin/AdminVariantManager";
 type Category = { id: string; name: string; slug: string };
 type Product = {
   id: string;
@@ -636,6 +636,16 @@ export function AdminProductsClient({
                         )}
                       </div>
                     ))}
+                  </div>
+                )}
+                {/* Variants */}
+                {editing && (
+                  <div className="apc-field">
+                    <label className="apc-label">Variants</label>
+                    <AdminVariantManager
+                      productId={editing.id}
+                      basePrice={Number(form.price) || editing.price}
+                    />
                   </div>
                 )}
               </div>
