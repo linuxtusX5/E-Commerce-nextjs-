@@ -21,6 +21,10 @@ import {
   Truck,
 } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
+import {
+  CouponInput,
+  type CouponResult,
+} from "@/components/checkout/CouponInput";
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
@@ -767,6 +771,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { items, getTotalPrice, clearCart } = useCartStore();
   const [mounted, setMounted] = useState(false);
+  const [coupon, setCoupon] = useState<CouponResult | null>(null);
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -780,7 +785,8 @@ export default function CheckoutPage() {
   const cartItems = mounted ? items : [];
   const shippingCost =
     SHIPPING_METHODS.find((m) => m.id === shippingMethod)?.price ?? 9.99;
-  const total = subtotal + shippingCost;
+  // const total = subtotal + shippingCost;
+  const finalAmount = subtotal + shippingCost - (coupon?.discount ?? 0);
 
   // Redirect if cart empty (after mount)
   useEffect(() => {
@@ -864,7 +870,7 @@ export default function CheckoutPage() {
                 {step === "payment" && (
                   <PaymentStep
                     items={stripeItems}
-                    total={total}
+                    total={finalAmount}
                     onSuccess={handlePaymentSuccess}
                     onBack={() => setStep("shipping")}
                   />
@@ -899,7 +905,6 @@ export default function CheckoutPage() {
                     </div>
                   ))}
                 </div>
-
                 <div className="ck-summary-totals">
                   <div className="ck-summary-row">
                     <span>Subtotal</span>
@@ -913,10 +918,16 @@ export default function CheckoutPage() {
                         : `$${shippingCost.toFixed(2)}`}
                     </span>
                   </div>
+                  <CouponInput
+                    subtotal={subtotal}
+                    applied={coupon}
+                    onApply={setCoupon}
+                    onRemove={() => setCoupon(null)}
+                  />
                   <div className="ck-summary-total">
                     <span>Total</span>
                     <span className="ck-summary-total-amt">
-                      ${total.toFixed(2)}
+                      ${finalAmount.toFixed(2)}
                     </span>
                   </div>
                 </div>
