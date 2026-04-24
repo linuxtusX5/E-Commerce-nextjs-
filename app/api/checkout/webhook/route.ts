@@ -28,6 +28,7 @@ export async function POST(req: Request) {
     const userId = intent.metadata.userId;
     const items = JSON.parse(intent.metadata.items ?? "[]");
     const total = intent.amount / 100;
+    const couponId = intent.metadata.couponId;
 
     if (!userId || userId === "guest" || !items.length) {
       return NextResponse.json({ received: true });
@@ -55,6 +56,14 @@ export async function POST(req: Request) {
           },
         },
       });
+
+      if (couponId) {
+        await db.coupon.update({
+          where: { id: couponId },
+          data: { usedCount: { increment: 1 } },
+        });
+      }
+
       // Decrement stock for each purchased item
       await Promise.all(
         items.map((item: any) =>
