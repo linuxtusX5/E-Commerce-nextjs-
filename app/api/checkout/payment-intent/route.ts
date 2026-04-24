@@ -10,7 +10,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const { amount, items } = await req.json();
+    const { amount, items, couponId } = await req.json();
 
     if (!amount || amount < 50) {
       return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
@@ -29,6 +29,7 @@ export async function POST(req: Request) {
             price: item.price ?? item.product?.price,
           })) ?? [],
         ),
+        couponId: couponId ?? "",
       },
     });
 
