@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Tag, X, Check, Loader2 } from "lucide-react";
 
-type CouponResult = {
+export type CouponResult = {
   id: string;
   code: string;
   type: string;
