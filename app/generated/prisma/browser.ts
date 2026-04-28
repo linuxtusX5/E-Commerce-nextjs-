@@ -62,3 +62,8 @@ export type ProductVariant = Prisma.ProductVariantModel
  * 
  */
 export type Review = Prisma.ReviewModel
+/**
+ * Model Coupon
+ * 
+ */
+export type Coupon = Prisma.CouponModel
