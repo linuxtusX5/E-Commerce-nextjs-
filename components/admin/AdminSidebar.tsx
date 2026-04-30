@@ -12,14 +12,17 @@ import {
   LogOut,
   ExternalLink,
   Settings,
+  BarChart2,
 } from "lucide-react";
 
 const NAV = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
+  { href: "/admin/analytics", label: "Analytics", icon: BarChart2 },
   { href: "/admin/orders", label: "Orders", icon: ShoppingBag },
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/categories", label: "Categories", icon: Tag },
+  { href: "/admin/coupons", label: "Coupons", icon: Tag },
 ];
 
 export function AdminSidebar() {
