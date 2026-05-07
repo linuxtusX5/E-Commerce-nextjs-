@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import "./globals.css";
-import { Header } from "@/components/layout/Header";
 import { AuthSessionProvider } from "@/components/providers/SessionProvider";
-import { Footer } from "@/components/layout/Footer";
-import { CartDrawer } from "@/components/cart/CartDrawer";
+import { I18nProvider } from "@/lib/i18n/context";
+import { getLocale, getMessages } from "@/lib/i18n/server";
 import { CartInitializer } from "@/components/cart/CartInitializer";
 
 export const metadata: Metadata = {
@@ -11,16 +9,21 @@ export const metadata: Metadata = {
   description: "Discover curated collections of fashion, accessories and more.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const locale = await getLocale();
+  const messages = await getMessages(locale);
+
   return (
-    <html lang="en">
+    <html lang={locale}>
       <body>
         <AuthSessionProvider>
-          <main>{children}</main>
+          <I18nProvider locale={locale} messages={messages}>
+            {children}
+          </I18nProvider>
           <CartInitializer />
         </AuthSessionProvider>
       </body>
