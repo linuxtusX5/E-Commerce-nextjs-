@@ -1,0 +1,103 @@
+{
+  "nav": {
+    "home": "홈",
+    "products": "상품",
+    "category": "카테고리",
+    "allProducts": "모든 상품",
+    "search": "검색",
+    "wishlist": "위시리스트",
+    "cart": "장바구니",
+    "signIn": "로그인",
+    "signOut": "로그아웃",
+    "myProfile": "내 프로필",
+    "myOrders": "주문 내역",
+    "adminDashboard": "관리자 대시보드",
+    "signedInAs": "로그인됨"
+  },
+  "home": {
+    "hero": {
+      "eyebrow": "새 컬렉션",
+      "title": "스타일이 말하다",
+      "subtitle": "현대적인 옷장을 위한 큐레이티드 패션. 품질과 타임리스 스타일.",
+      "shopNow": "지금 쇼핑",
+      "viewLookbook": "룩북 보기"
+    },
+    "categories": {
+      "eyebrow": "탐색",
+      "title": "카테고리별 쇼핑",
+      "allCategories": "모든 카테고리 →"
+    },
+    "featured": { "eyebrow": "엄선", "title": "추천 상품" },
+    "newArrivals": { "eyebrow": "신상", "title": "신규 입고" },
+    "newsletter": {
+      "eyebrow": "뉴스레터",
+      "title": "최신 소식 받기",
+      "subtitle": "새 상품 선행 접근, 독점 혜택, 스타일 영감을 이메일로 받아보세요.",
+      "placeholder": "이메일 주소 입력",
+      "subscribe": "구독하기",
+      "privacy": "스팸 없음. 언제든지 구독 취소 가능.",
+      "success": "등록 완료! 환영합니다!"
+    }
+  },
+  "product": {
+    "addToCart": "장바구니 담기",
+    "addedToCart": "담았습니다",
+    "outOfStock": "품절",
+    "inStock": "재고 있음",
+    "lowStock": "남은 수량 {count}개",
+    "quantity": "수량",
+    "available": "재고",
+    "share": "공유",
+    "reviews": "고객 리뷰",
+    "writeReview": "리뷰 작성",
+    "editReview": "리뷰 수정",
+    "noReviews": "아직 리뷰가 없습니다. 첫 번째 리뷰를 작성해 보세요!",
+    "yourRating": "평점",
+    "reviewTitle": "제목 (선택사항)",
+    "reviewBody": "리뷰",
+    "submit": "제출",
+    "relatedProducts": "이런 상품은 어떠세요"
+  },
+  "cart": {
+    "title": "장바구니",
+    "empty": "장바구니가 비어 있습니다",
+    "startShopping": "쇼핑 시작하기",
+    "subtotal": "소계",
+    "shipping": "배송비",
+    "free": "무료",
+    "total": "합계",
+    "checkout": "결제하기",
+    "remove": "삭제",
+    "continueShopping": "쇼핑 계속하기"
+  },
+  "account": {
+    "profile": "프로필",
+    "orders": "주문",
+    "wishlist": "위시리스트",
+    "addresses": "주소",
+    "noOrders": "주문 내역이 없습니다",
+    "startShopping": "쇼핑 시작하기",
+    "orderHistory": "주문 내역"
+  },
+  "common": {
+    "loading": "로딩 중...",
+    "error": "오류가 발생했습니다",
+    "save": "저장",
+    "cancel": "취소",
+    "delete": "삭제",
+    "edit": "편집",
+    "close": "닫기",
+    "back": "뒤로",
+    "next": "다음",
+    "previous": "이전",
+    "search": "검색",
+    "filter": "필터",
+    "sort": "정렬",
+    "viewAll": "모두 보기",
+    "noResults": "결과를 찾을 수 없습니다"
+  },
+  "footer": {
+    "tagline": "현대적인 옷장을 위한 큐레이티드 패션.",
+    "rights": "모든 권리 보유."
+  }
+}

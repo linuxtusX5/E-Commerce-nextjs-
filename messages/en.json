@@ -1,0 +1,103 @@
+{
+  "nav": {
+    "home": "Home",
+    "products": "Products",
+    "category": "Category",
+    "allProducts": "All products",
+    "search": "Search",
+    "wishlist": "Wishlist",
+    "cart": "Cart",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "myProfile": "My Profile",
+    "myOrders": "My Orders",
+    "adminDashboard": "Admin Dashboard",
+    "signedInAs": "Signed in as"
+  },
+  "home": {
+    "hero": {
+      "eyebrow": "New Collection",
+      "title": "Style that speaks for itself",
+      "subtitle": "Curated fashion for the modern wardrobe. Quality pieces, timeless style.",
+      "shopNow": "Shop Now",
+      "viewLookbook": "View Lookbook"
+    },
+    "categories": {
+      "eyebrow": "Browse",
+      "title": "Shop by Category",
+      "allCategories": "All categories →"
+    },
+    "featured": { "eyebrow": "Handpicked", "title": "Featured Products" },
+    "newArrivals": { "eyebrow": "Just In", "title": "New Arrivals" },
+    "newsletter": {
+      "eyebrow": "Newsletter",
+      "title": "Stay in the Loop",
+      "subtitle": "Get early access to new drops, exclusive offers and style inspiration.",
+      "placeholder": "Enter your email",
+      "subscribe": "Subscribe",
+      "privacy": "No spam, ever. Unsubscribe at any time.",
+      "success": "You're on the list! Welcome aboard."
+    }
+  },
+  "product": {
+    "addToCart": "Add to bag",
+    "addedToCart": "Added to bag",
+    "outOfStock": "Out of stock",
+    "inStock": "In stock",
+    "lowStock": "Only {count} left",
+    "quantity": "Quantity",
+    "available": "available",
+    "share": "Share",
+    "reviews": "Customer Reviews",
+    "writeReview": "Write a review",
+    "editReview": "Edit your review",
+    "noReviews": "No reviews yet. Be the first!",
+    "yourRating": "Your rating",
+    "reviewTitle": "Title (optional)",
+    "reviewBody": "Review",
+    "submit": "Submit",
+    "relatedProducts": "You might also like"
+  },
+  "cart": {
+    "title": "Your Cart",
+    "empty": "Your cart is empty",
+    "startShopping": "Start shopping",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "free": "Free",
+    "total": "Total",
+    "checkout": "Checkout",
+    "remove": "Remove",
+    "continueShopping": "Continue shopping"
+  },
+  "account": {
+    "profile": "Profile",
+    "orders": "Orders",
+    "wishlist": "Wishlist",
+    "addresses": "Addresses",
+    "noOrders": "No orders yet",
+    "startShopping": "Start shopping",
+    "orderHistory": "Order History"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort by",
+    "viewAll": "View all",
+    "noResults": "No results found"
+  },
+  "footer": {
+    "tagline": "Curated fashion for the modern wardrobe.",
+    "rights": "All rights reserved."
+  }
+}

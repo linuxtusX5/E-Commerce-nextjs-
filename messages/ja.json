@@ -1,0 +1,103 @@
+{
+  "nav": {
+    "home": "ホーム",
+    "products": "商品",
+    "category": "カテゴリー",
+    "allProducts": "すべての商品",
+    "search": "検索",
+    "wishlist": "ウィッシュリスト",
+    "cart": "カート",
+    "signIn": "ログイン",
+    "signOut": "ログアウト",
+    "myProfile": "マイプロフィール",
+    "myOrders": "注文履歴",
+    "adminDashboard": "管理ダッシュボード",
+    "signedInAs": "ログイン中"
+  },
+  "home": {
+    "hero": {
+      "eyebrow": "新コレクション",
+      "title": "スタイルが語る",
+      "subtitle": "モダンなワードローブのためのキュレーテッドファッション。品質とタイムレスなスタイル。",
+      "shopNow": "今すぐ購入",
+      "viewLookbook": "ルックブックを見る"
+    },
+    "categories": {
+      "eyebrow": "ブラウズ",
+      "title": "カテゴリーから探す",
+      "allCategories": "すべてのカテゴリー →"
+    },
+    "featured": { "eyebrow": "厳選", "title": "注目商品" },
+    "newArrivals": { "eyebrow": "新着", "title": "新入荷" },
+    "newsletter": {
+      "eyebrow": "ニュースレター",
+      "title": "最新情報をお届け",
+      "subtitle": "新商品の先行アクセス、限定オファー、スタイルのヒントをメールでお届けします。",
+      "placeholder": "メールアドレスを入力",
+      "subscribe": "登録する",
+      "privacy": "スパムなし。いつでも退会できます。",
+      "success": "登録完了！ようこそ！"
+    }
+  },
+  "product": {
+    "addToCart": "カートに追加",
+    "addedToCart": "追加しました",
+    "outOfStock": "在庫切れ",
+    "inStock": "在庫あり",
+    "lowStock": "残り{count}点",
+    "quantity": "数量",
+    "available": "在庫",
+    "share": "シェア",
+    "reviews": "カスタマーレビュー",
+    "writeReview": "レビューを書く",
+    "editReview": "レビューを編集",
+    "noReviews": "まだレビューはありません。最初のレビューを書きませんか？",
+    "yourRating": "評価",
+    "reviewTitle": "タイトル（任意）",
+    "reviewBody": "レビュー",
+    "submit": "送信",
+    "relatedProducts": "こちらもおすすめ"
+  },
+  "cart": {
+    "title": "カート",
+    "empty": "カートは空です",
+    "startShopping": "ショッピングを始める",
+    "subtotal": "小計",
+    "shipping": "送料",
+    "free": "無料",
+    "total": "合計",
+    "checkout": "レジへ進む",
+    "remove": "削除",
+    "continueShopping": "ショッピングを続ける"
+  },
+  "account": {
+    "profile": "プロフィール",
+    "orders": "注文",
+    "wishlist": "ウィッシュリスト",
+    "addresses": "住所",
+    "noOrders": "注文履歴はありません",
+    "startShopping": "ショッピングを始める",
+    "orderHistory": "注文履歴"
+  },
+  "common": {
+    "loading": "読み込み中...",
+    "error": "エラーが発生しました",
+    "save": "保存",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "edit": "編集",
+    "close": "閉じる",
+    "back": "戻る",
+    "next": "次へ",
+    "previous": "前へ",
+    "search": "検索",
+    "filter": "フィルター",
+    "sort": "並び替え",
+    "viewAll": "すべて見る",
+    "noResults": "結果が見つかりません"
+  },
+  "footer": {
+    "tagline": "モダンなワードローブのためのキュレーテッドファッション。",
+    "rights": "全著作権所有。"
+  }
+}
