@@ -15,6 +15,9 @@ import {
 } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
 import { siteConfig } from "@/config/site";
+import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
+import type { Locale } from "@/components/i18n/LanguageSwitcher";
+import { useT } from "@/lib/i18n/context";
 
 type Props = {
   scrolled: boolean;
@@ -36,6 +39,8 @@ export function Navbar({
   const totalItems = useCartStore((s: any) => s.getTotalItems());
   const toggleCart = useCartStore((s: any) => s.toggleCart);
   const [mounted, setMounted] = useState(false);
+  const [locale, setLocale] = useState<Locale>("en");
+  const t = useT();
 
   const [categories, setCategories] = useState<Category[]>([]);
   useEffect(() => {
@@ -43,6 +48,12 @@ export function Navbar({
     fetch("/api/categories")
       .then((r) => r.json())
       .then((d) => setCategories(d.categories ?? []));
+
+    const cookieLocale = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("locale="))
+      ?.split("=")[1] as Locale | undefined;
+    if (cookieLocale) setLocale(cookieLocale);
   }, []);
 
   const cartCount = mounted ? totalItems : 0;
@@ -381,7 +392,7 @@ export function Navbar({
           {/* Categories dropdown */}
           <li className="nav-dropdown">
             <button className="nav-dropdown-trigger">
-              Category
+              {t("nav.category")}
               <ChevronDown size={14} />
             </button>
             <div className="nav-dropdown-menu">
@@ -426,7 +437,7 @@ export function Navbar({
           >
             <Heart size={18} />
           </Link>
-
+          <LanguageSwitcher currentLocale={locale} />
           {/* Cart */}
           <button
             className="nav-icon-btn"
